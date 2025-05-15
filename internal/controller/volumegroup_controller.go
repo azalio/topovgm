@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jakobmoellerdev/lvm2go"
+	"github.com/azalio/lvm2go"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"

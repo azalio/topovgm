@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jakobmoellerdev/lvm2go"
+	"github.com/azalio/lvm2go"
 	"github.com/topolvm/topovgm/api/v1alpha1"
 	"github.com/topolvm/topovgm/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/log"

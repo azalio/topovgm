@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jakobmoellerdev/lvm2go"
+	"github.com/azalio/lvm2go"
 	"github.com/topolvm/topovgm/api/v1alpha1"
 	"github.com/topolvm/topovgm/internal/selector"
 	"github.com/topolvm/topovgm/internal/utils"

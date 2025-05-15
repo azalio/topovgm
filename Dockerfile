@@ -27,4 +27,5 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 # Use alpine for nsenter, but it can be any image with nsenter installed
 FROM alpine:latest
 
+RUN apk add --no-cache lvm2 util-linux
 COPY --from=builder /workspace/manager .
