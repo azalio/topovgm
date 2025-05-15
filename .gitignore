@@ -25,3 +25,5 @@ go.work
 *.swp
 *.swo
 *~
+chats.db
+talos-hk8-ou1.log

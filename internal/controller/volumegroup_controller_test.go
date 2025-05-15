@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jakobmoellerdev/lvm2go"
+	"github.com/azalio/lvm2go"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/topolvm/topovgm/internal/lsblk"

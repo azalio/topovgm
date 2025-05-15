@@ -3,7 +3,7 @@ kind: VolumeGroup
 metadata:
   name: vg1
 spec:
-  nodeName: crc
+  nodeName: talos-hk8-ou1
   allocationPolicy: normal
   tags:
     - topovgm
@@ -14,4 +14,4 @@ spec:
         - key: PATH
           operator: In
           values:
-            - /dev/loop5
+            - /dev/sdb

@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/jakobmoellerdev/lvm2go"
+	"github.com/azalio/lvm2go"
 	"github.com/topolvm/topovgm/internal/utils"
 )
 
