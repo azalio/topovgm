@@ -30,11 +30,6 @@ resources:
 # [METRICS] Expose the controller manager metrics service.
 - metrics_service.yaml
 
-configMapGenerator:
-- name: custom-lvm-conf # This will be prefixed with topovgm- by namePrefix
-  files:
-  - custom-lvm.conf # Assumes custom-lvm.conf is in the same dir (config/default)
-
 # Uncomment the patches line if you enable Metrics, and/or are using webhooks and cert-manager
 patches:
 # [METRICS] The following patch will enable the metrics endpoint using HTTPS and the port :8443.
