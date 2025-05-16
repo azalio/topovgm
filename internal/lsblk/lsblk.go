@@ -33,7 +33,7 @@ func (e *noNsenterCommandExecutor) CommandContext(ctx context.Context, cmd strin
 	return lvm2go.CommandContext(ctx, cmd, args...)
 }
 
-const lsblkCommand = "/usr/bin/lsblk"
+const lsblkCommand = "/bin/lsblk"
 
 // Column is the type of key that can be used in a node selector requirement.
 // +enum
