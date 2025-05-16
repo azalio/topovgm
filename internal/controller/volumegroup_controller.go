@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"os/exec" // Added for exec.ExitError
 
 	"github.com/azalio/lvm2go"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -108,13 +109,31 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	defer cancel()
 	lvm, err := r.LVM.VG(ctx, name, lvm2go.UnitBytes)
 
-	logger.V(1).Info("host discovery completed", "duration", time.Since(start))
+	logger.V(1).Info("host discovery completed", "duration", time.Since(start), "errorFromLVMVG", fmt.Sprintf("%#v", err))
 
-	if errors.Is(err, lvm2go.ErrVolumeGroupNotFound) {
-		err = r.initializeVG(ctx, vg)
+	if err != nil { // If there's any error from discovery
+		var exitErr *exec.ExitError
+		isNotFound := errors.Is(err, lvm2go.ErrVolumeGroupNotFound)
+		isExitStatus5 := false
+		if errors.As(err, &exitErr) {
+			// Ensure ProcessState is not nil before calling ExitCode()
+			if exitErr.ProcessState != nil && exitErr.ProcessState.ExitCode() == 5 {
+				isExitStatus5 = true
+				logger.Info("Discovery failed with LVM exit status 5, treating as not found.", "originalError", err)
+			}
+		}
+
+		if isNotFound || isExitStatus5 {
+			logger.Info("Volume group not found during discovery (or discovery failed with exit 5), attempting initialization.", "originalErrorForIsNotFound", err)
+			err = r.initializeVG(ctx, vg) // Attempt to create it
+		}
+		// If err was not ErrVolumeGroupNotFound and not ExitStatus5, and it was not nil initially,
+		// it will fall through to the next check. If initializeVG was called and failed, err will also be set.
 	}
 
+	// After potential discovery error handling and/or initialization attempt:
 	if err != nil {
+		logger.Error(err, "Error after discovery and potential initialization")
 		return ctrl.Result{}, errors.Join(err, r.Client.Status().Update(ctx, vg))
 	}
 
