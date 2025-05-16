@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os/exec" // Kept for exec.ExitError, just in case
+	"strings"  // Added for strings.Contains
 	"time"
-	"os/exec" // Added for exec.ExitError
 
 	"github.com/azalio/lvm2go"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -109,31 +110,39 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	defer cancel()
 	lvm, err := r.LVM.VG(ctx, name, lvm2go.UnitBytes)
 
-	logger.V(1).Info("host discovery completed", "duration", time.Since(start), "errorFromLVMVG", fmt.Sprintf("%#v", err))
+	logger.V(1).Info("host discovery completed", "duration", time.Since(start), "errorFromLVMVG", fmt.Sprintf("%#v", err), "errorString", err.Error())
 
 	if err != nil { // If there's any error from discovery
-		var exitErr *exec.ExitError
 		isNotFound := errors.Is(err, lvm2go.ErrVolumeGroupNotFound)
-		isExitStatus5 := false
-		if errors.As(err, &exitErr) {
-			// Ensure ProcessState is not nil before calling ExitCode()
-			if exitErr.ProcessState != nil && exitErr.ProcessState.ExitCode() == 5 {
-				isExitStatus5 = true
-				logger.Info("Discovery failed with LVM exit status 5, treating as not found.", "originalError", err)
-			}
+		
+		isExitStatus5ByString := false
+		// Check error string first as lvm2go might not wrap exec.ExitError directly in all failure paths
+		if !isNotFound && err.Error() != "" && strings.Contains(err.Error(), "exit status 5") {
+			isExitStatus5ByString = true
+			logger.Info("Discovery raw error string contains 'exit status 5', treating as potentially not found.", "originalError", err)
 		}
 
-		if isNotFound || isExitStatus5 {
-			logger.Info("Volume group not found during discovery (or discovery failed with exit 5), attempting initialization.", "originalErrorForIsNotFound", err)
+		var exitErr *exec.ExitError
+		isExitStatus5ByType := false
+		if errors.As(err, &exitErr) {
+			if exitErr.ProcessState != nil && exitErr.ProcessState.ExitCode() == 5 {
+				isExitStatus5ByType = true
+				// Avoid double logging if string check already caught it, but confirm type assertion worked
+				logger.Info("Discovery error unwrapped to LVM exit status 5 (type assertion), treating as not found.", "originalError", err)
+			}
+		}
+		
+		if isNotFound || isExitStatus5ByString || isExitStatus5ByType {
+			logger.Info("Volume group considered not found (or discovery failed appropriately), attempting initialization.", "isNotFound", isNotFound, "isExitStatus5ByString", isExitStatus5ByString, "isExitStatus5ByType", isExitStatus5ByType, "originalError", err)
 			err = r.initializeVG(ctx, vg) // Attempt to create it
 		}
-		// If err was not ErrVolumeGroupNotFound and not ExitStatus5, and it was not nil initially,
-		// it will fall through to the next check. If initializeVG was called and failed, err will also be set.
+		// If err was not any of the above "not found" conditions, and it was not nil initially,
+		// it will fall through to the next check. If initializeVG was called and failed, err will also be set here.
 	}
 
 	// After potential discovery error handling and/or initialization attempt:
 	if err != nil {
-		logger.Error(err, "Error after discovery and potential initialization")
+		logger.Error(err, "Error after discovery and potential initialization phases")
 		return ctrl.Result{}, errors.Join(err, r.Client.Status().Update(ctx, vg))
 	}
 
