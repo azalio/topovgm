@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: docker.io/azalio/topovgm
-  newTag: bcebb93d5270d3131cd2a42e0eb3a7ea17a9f28b
+  newTag: 1075a7855021fef3d415a8aaeb6bfe3fa797cdb9

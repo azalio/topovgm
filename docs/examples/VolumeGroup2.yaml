@@ -1,0 +1,21 @@
+apiVersion: topolvm.io/v1alpha1
+kind: VolumeGroup
+metadata:
+  name: vg1-talos-q7m-9py
+  namespace: topolvm-system
+spec:
+  allocationPolicy: normal
+  deviceLossSynchronizationPolicy: Fail
+  deviceRemovalVolumePolicy: MoveAndReduce
+  nodeName: talos-q7m-9py
+  nameOnNode: vg1
+  physicalExtentSize: 4Mi
+  physicalVolumeSelector:
+  - matchLSBLK:
+    - key: PATH
+      operator: In
+      values:
+      - /dev/sdb
+  tags:
+  - topovgm
+  zero: true
