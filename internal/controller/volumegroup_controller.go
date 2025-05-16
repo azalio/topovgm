@@ -88,7 +88,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			logger.V(1).Info("force removal of volume group from host due to passed grace period")
 		}
 		if err := r.LVM.VGRemove(ctx, name, lvm2go.Force(force)); err != nil {
-			if lvm2go.IsLVMErrNotFound(err) {
+			if errors.Is(err, lvm2go.ErrVolumeGroupNotFound) {
 				logger.V(1).Info("volume group not found on host, removing finalizer")
 			} else {
 				return ctrl.Result{}, fmt.Errorf("failed to remove volume group: %w", err)

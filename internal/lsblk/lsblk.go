@@ -12,8 +12,28 @@ import (
 	"github.com/topolvm/topovgm/internal/utils"
 )
 
+// noNsenterCommandExecutor is a wrapper that ensures commands are executed without nsenter
+type noNsenterCommandExecutor struct {
+	client lvm2go.Client
+}
+
+// newNoNsenterCommandExecutor creates a new executor that will never use nsenter
+func newNoNsenterCommandExecutor() *noNsenterCommandExecutor {
+	standardClient := lvm2go.NewClient()
+	noNsenterClient := lvm2go.WithNoNsenter(standardClient)
+	return &noNsenterCommandExecutor{
+		client: noNsenterClient,
+	}
+}
+
+// CommandContext creates an exec.Cmd that will never use nsenter
+func (e *noNsenterCommandExecutor) CommandContext(ctx context.Context, cmd string, args ...string) *exec.Cmd {
+	// Apply the noNsenter context to ensure nsenter is never used
+	ctx = lvm2go.WithForceNoNsenter(ctx, true)
+	return lvm2go.CommandContext(ctx, cmd, args...)
+}
+
 const lsblkCommand = "/usr/bin/lsblk"
-const nsenterCommand = "/usr/bin/nsenter"
 
 // Column is the type of key that can be used in a node selector requirement.
 // +enum
@@ -122,15 +142,14 @@ func LSBLK(ctx context.Context, columns ...Column) ([]BlockDevice, error) {
 
 // runInto calls sub-commands and decodes the output via JSON into the provided struct pointer.
 // if the struct pointer is nil, the output will be printed to the log instead.
+// Global executor instance
+var executor = newNoNsenterCommandExecutor()
+
 func runInto(ctx context.Context, into *map[string][]BlockDevice, args ...string) error {
 	var cmd *exec.Cmd
 
-	if lvm2go.IsContainerized(ctx) {
-		args = append([]string{"-m", "-u", "-i", "-n", "-p", "-t", "1", lsblkCommand}, args...)
-		cmd = exec.CommandContext(ctx, nsenterCommand, args...)
-	} else {
-		cmd = exec.CommandContext(ctx, lsblkCommand, args...)
-	}
+	// Use the noNsenterCommandExecutor to ensure nsenter is never used
+	cmd = executor.CommandContext(ctx, lsblkCommand, args...)
 	cmd.Env = append(cmd.Env, "LC_ALL=C")
 
 	output, err := lvm2go.StreamedCommand(ctx, cmd)

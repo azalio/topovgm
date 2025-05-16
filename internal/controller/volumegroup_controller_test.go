@@ -278,7 +278,7 @@ var _ = Describe("VolumeGroup Controller", func() {
 					NamespacedName: typeNamespacedName,
 				})
 
-				Expect(err).To(Satisfy(lvm2go.IsLVMErrVGMissingPVs))
+				Expect(err).To(Satisfy(lvm2go.IsVGMissingPVs))
 
 				resource := &topolvmv1alpha1.VolumeGroup{}
 				Expect(k8sClient.Get(ctx, typeNamespacedName, resource)).To(Succeed())

@@ -46,8 +46,8 @@ func (r *VolumeGroupReconciler) sync(
 	// Handle device loss based on the DeviceLossSynchronizationPolicy.
 	// If activated and the volume group is missing physical volumes, remove them.
 	// If set to Fail and the volume group is missing physical volumes, return an error.
-	if lvm2go.IsLVMErrVGMissingPVs(err) {
-		if missingVG, missingPV, lastWritePath, ok := lvm2go.LVMErrVGMissingPVsDetails(err); ok {
+	if lvm2go.IsVGMissingPVs(err) {
+		if missingVG, missingPV, lastWritePath, ok := lvm2go.VGMissingPVsDetails(err); ok {
 			logger = logger.WithValues(
 				"missingVolumeGroup", missingVG,
 				"missingPhysicalVolume", missingPV,
