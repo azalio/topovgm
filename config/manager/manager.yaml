@@ -53,9 +53,6 @@ spec:
               mountPath: /dev
             - name: host-run-lvm
               mountPath: /run/lvm
-            - name: lvm-config-volume
-              mountPath: /etc/lvm/lvm.conf
-              subPath: lvm.conf
           livenessProbe:
             httpGet:
               path: /healthz
@@ -86,9 +83,3 @@ spec:
           hostPath:
             path: /run/lvm
             type: DirectoryOrCreate
-        - name: lvm-config-volume
-          configMap:
-            name: topovgm-custom-lvm-conf # Kustomize prefixed name
-            items:
-              - key: custom-lvm.conf # Original filename used in configMapGenerator
-                path: lvm.conf      # Target filename in the mount
