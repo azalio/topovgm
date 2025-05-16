@@ -1,7 +1,7 @@
 github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df h1:7RFfzj4SSt6nnvCPbCqijJi1nWCd+TqAT3bYCStRC18=
 github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df/go.mod h1:pSwJ0fSY5KhvocuWSx4fz3BA8OrA1bQn+K1Eli3BRwM=
-github.com/azalio/lvm2go v0.0.0-20250515222059-2cf2d8e290f2 h1:D/2gD6k6cQKzb6GPmL5cAhEjeP75hsoYfh+V+1hvXso=
-github.com/azalio/lvm2go v0.0.0-20250515222059-2cf2d8e290f2/go.mod h1:PP9/CiZbls3j7nAoFgWRg6ejS5goLpvbMzCnpu7Ju6M=
+github.com/azalio/lvm2go v0.0.0-20250515233216-0317a8321806 h1:s/Upc3MnwA9z4mJfvzTfq7hfWo5iqZAbvuFh8UB9ZB8=
+github.com/azalio/lvm2go v0.0.0-20250515233216-0317a8321806/go.mod h1:PP9/CiZbls3j7nAoFgWRg6ejS5goLpvbMzCnpu7Ju6M=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/blang/semver/v4 v4.0.0 h1:1PFHFE6yCCTv8C1TeyNNarDzntLi7wMI5i/pzqYIsAM=

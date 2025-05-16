@@ -23,8 +23,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-logr/logr"
 	"github.com/azalio/lvm2go"
+	"github.com/go-logr/logr"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -122,11 +122,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create a standard client
+	standardClient := lvm2go.NewClient()
+
+	// Create a client that will never use nsenter
+	noNsenterClient := lvm2go.WithNoNsenter(standardClient)
+
 	if err = (&controller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		NodeName:     os.Getenv("NODE_NAME"),
-		LVM:          lvm2go.NewClient(),
+		LVM:          noNsenterClient,
 		SyncInterval: volumeGroupSyncInterval,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VolumeGroup")

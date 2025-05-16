@@ -3,7 +3,7 @@ module github.com/topolvm/topovgm
 go 1.22.5
 
 require (
-	github.com/azalio/lvm2go v0.0.0-20250515222059-2cf2d8e290f2
+	github.com/azalio/lvm2go v0.0.0-20250515233216-0317a8321806
 	github.com/go-logr/logr v1.4.2
 	github.com/onsi/ginkgo/v2 v2.19.1
 	github.com/onsi/gomega v1.34.1
