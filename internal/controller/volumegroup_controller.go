@@ -110,30 +110,39 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	defer cancel()
 	lvm, err := r.LVM.VG(ctx, name, lvm2go.UnitBytes)
 
-	logger.V(1).Info("host discovery completed", "duration", time.Since(start), "errorFromLVMVG", fmt.Sprintf("%#v", err), "errorString", err.Error())
+	logger.V(1).Info("host discovery completed", "duration", time.Since(start), "errorTypeFromLVMVG", fmt.Sprintf("%T", err), "errorValueFromLVMVG", err)
 
 	if err != nil { // If there's any error from discovery
+		logger.Info("Discovery returned an error", "errString", err.Error()) // Log the basic error string safely
+
 		isNotFound := errors.Is(err, lvm2go.ErrVolumeGroupNotFound)
-		
-		isExitStatus5ByString := false
-		// Check error string first as lvm2go might not wrap exec.ExitError directly in all failure paths
-		if !isNotFound && err.Error() != "" && strings.Contains(err.Error(), "exit status 5") {
-			isExitStatus5ByString = true
-			logger.Info("Discovery raw error string contains 'exit status 5', treating as potentially not found.", "originalError", err)
-		}
+		logger.Info("Checked errors.Is(err, lvm2go.ErrVolumeGroupNotFound)", "isNotFound", isNotFound)
 
 		var exitErr *exec.ExitError
-		isExitStatus5ByType := false
-		if errors.As(err, &exitErr) {
-			if exitErr.ProcessState != nil && exitErr.ProcessState.ExitCode() == 5 {
-				isExitStatus5ByType = true
-				// Avoid double logging if string check already caught it, but confirm type assertion worked
-				logger.Info("Discovery error unwrapped to LVM exit status 5 (type assertion), treating as not found.", "originalError", err)
-			}
-		}
+		foundExecExitError := errors.As(err, &exitErr)
+		logger.Info("Checked errors.As(err, &exitErr)", "foundExecExitError", foundExecExitError)
 		
-		if isNotFound || isExitStatus5ByString || isExitStatus5ByType {
-			logger.Info("Volume group considered not found (or discovery failed appropriately), attempting initialization.", "isNotFound", isNotFound, "isExitStatus5ByString", isExitStatus5ByString, "isExitStatus5ByType", isExitStatus5ByType, "originalError", err)
+		isExitStatus5FromType := false
+		if foundExecExitError && exitErr.ProcessState != nil {
+			logger.Info("exec.ExitError found", "exitCode", exitErr.ProcessState.ExitCode())
+			if exitErr.ProcessState.ExitCode() == 5 {
+				isExitStatus5FromType = true
+			}
+		} else if foundExecExitError && exitErr.ProcessState == nil {
+			logger.Info("exec.ExitError found, but ProcessState is nil")
+		}
+
+		// Fallback to string checking if typed checks fail
+		errStr := err.Error() // Safe to call .Error() as err is not nil here
+		containsExitStatus5InString := strings.Contains(errStr, "exit status 5")
+		logger.Info("Checked strings.Contains(err.Error(), 'exit status 5')", "containsExitStatus5InString", containsExitStatus5InString, "errStr", errStr)
+
+		if isNotFound || isExitStatus5FromType || (!isNotFound && !isExitStatus5FromType && containsExitStatus5InString) {
+			logger.Info("Volume group considered not found or discovery failed with exit 5, attempting initialization.",
+				"isNotFound", isNotFound,
+				"isExitStatus5FromType", isExitStatus5FromType,
+				"containsExitStatus5InString", containsExitStatus5InString,
+				"originalError", err)
 			err = r.initializeVG(ctx, vg) // Attempt to create it
 		}
 		// If err was not any of the above "not found" conditions, and it was not nil initially,
